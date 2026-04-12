@@ -17,6 +17,11 @@ public class PlayerController : MonoBehaviour
     public float fishSize = 1f;
     public float minFishSize = 0.5f;
 
+    public float minX = -64f;
+    public float maxX = 64f;
+    public float minZ = -36f;
+    public float maxZ = 36f;
+
     public float shrinkThreshold = 50f;
     public float shrinkRate = 0.3f;
     public float visualShrinkRate = 0.12f;
@@ -25,7 +30,7 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        gameManager = FindObjectOfType<GameManager>();
+        gameManager = FindFirstObjectByType<GameManager>();
 
         if (gameManager != null)
         {
@@ -50,8 +55,8 @@ public class PlayerController : MonoBehaviour
 
         transform.position += move * moveSpeed * Time.deltaTime;
 
-        float clampedX = Mathf.Clamp(transform.position.x, -24f, 24f);
-        float clampedZ = Mathf.Clamp(transform.position.z, -24f, 24f);
+        float clampedX = Mathf.Clamp(transform.position.x, minX, maxX);
+        float clampedZ = Mathf.Clamp(transform.position.z, minZ, maxZ);
 
         transform.position = new Vector3(clampedX, fixedY, clampedZ);
 
@@ -106,7 +111,7 @@ public class PlayerController : MonoBehaviour
 
             if (mySize > otherSize)
             {
-                EatFish(other.gameObject, otherFish.fishSize);
+                EatFish(other.gameObject, otherFish.scoreValue);
             }
             else if (otherSize >= mySize * 1.2f)
             {
@@ -122,9 +127,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void EatFish(GameObject fishObject, float eatenFishSize)
+    void EatFish(GameObject fishObject, int eatenFishScoreValue)
     {
-        score++;
+        score += eatenFishScoreValue;
         hunger = Mathf.Min(hunger + hungerRestoreAmount, 100f);
 
         transform.localScale += new Vector3(growthAmount, growthAmount, growthAmount);

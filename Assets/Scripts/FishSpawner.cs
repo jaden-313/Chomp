@@ -2,15 +2,22 @@ using UnityEngine;
 
 public class FishSpawner : MonoBehaviour
 {
-    public GameObject aiFishPrefab;
+    public Transform player;
 
-    public int targetFishCount = 12;
+    // Add one entry for each species prefab. The spawner instantiates these directly.
+    public FishSpawnEntry[] speciesPrefabs;
+
+    public int targetFishCount = 45;
     public float spawnCheckInterval = 2f;
+    public float spawnNearPlayerChance = 0.75f;
+    public float edibleSpawnChance = 0.65f;
+    public float minSpawnDistanceFromPlayer = 8f;
+    public float maxSpawnDistanceFromPlayer = 22f;
 
-    public float minX = -20f;
-    public float maxX = 20f;
-    public float minZ = -20f;
-    public float maxZ = 20f;
+    public float minX = -60f;
+    public float maxX = 60f;
+    public float minZ = -34f;
+    public float maxZ = 34f;
     public float fixedY = 0.5f;
 
     private float timer;
@@ -33,75 +40,165 @@ public class FishSpawner : MonoBehaviour
 
     void SpawnUntilTarget()
     {
-        FishAI[] allFish = FindObjectsOfType<FishAI>();
+        FishAI[] allFish = FindObjectsByType<FishAI>(FindObjectsSortMode.None);
 
         while (allFish.Length < targetFishCount)
         {
             SpawnFish();
-            allFish = FindObjectsOfType<FishAI>();
+            allFish = FindObjectsByType<FishAI>(FindObjectsSortMode.None);
         }
     }
 
     void SpawnFish()
     {
-        Vector3 spawnPosition = new Vector3(
+        Vector3 spawnPosition = GetSpawnPosition();
+
+        GameObject fishPrefab = GetPrefabForSpawn();
+
+        if (fishPrefab != null)
+        {
+            Instantiate(fishPrefab, spawnPosition, Quaternion.identity);
+        }
+    }
+
+    Vector3 GetSpawnPosition()
+    {
+        if (player != null && Random.value < spawnNearPlayerChance)
+        {
+            Vector2 direction = Random.insideUnitCircle.normalized;
+            float distance = Random.Range(minSpawnDistanceFromPlayer, maxSpawnDistanceFromPlayer);
+
+            float spawnX = player.position.x + direction.x * distance;
+            float spawnZ = player.position.z + direction.y * distance;
+
+            return new Vector3(
+                Mathf.Clamp(spawnX, minX, maxX),
+                fixedY,
+                Mathf.Clamp(spawnZ, minZ, maxZ)
+            );
+        }
+
+        return new Vector3(
             Random.Range(minX, maxX),
             fixedY,
             Random.Range(minZ, maxZ)
         );
-
-        GameObject newFish = Instantiate(aiFishPrefab, spawnPosition, Quaternion.identity);
-
-        FishAI fishAI = newFish.GetComponent<FishAI>();
-
-        if (fishAI != null)
-        {
-            float randomSize = GetWeightedFishSize();
-            float randomSpeed = GetSpeedFromSize(randomSize);
-
-            fishAI.SetFishStats(randomSize, randomSpeed);
-        }
     }
 
-    float GetWeightedFishSize()
+    GameObject GetPrefabForSpawn()
     {
-        float roll = Random.value;
+        // Most spawns try to keep edible fish available near the player.
+        // If none are edible yet, the spawner falls back to the full species list.
+        if (player != null && Random.value < edibleSpawnChance)
+        {
+            GameObject ediblePrefab = GetRandomEdiblePrefab(player.localScale.x);
 
-        if (roll < 0.65f)
-        {
-            // 65% clearly edible
-            return Random.Range(0.35f, 0.70f);
+            if (ediblePrefab != null)
+            {
+                return ediblePrefab;
+            }
         }
-        else if (roll < 0.82f)
-        {
-            // 17% slightly smaller / medium
-            return Random.Range(0.70f, 0.90f);
-        }
-        else if (roll < 0.95f)
-        {
-            // 13% dangerous but not huge
-            return Random.Range(1.20f, 1.80f);
-        }
-        else
-        {
-            // 5% giant fish
-            return Random.Range(2.2f, 3.5f);
-        }
+
+        return GetRandomPrefab();
     }
 
-    float GetSpeedFromSize(float size)
+    GameObject GetRandomEdiblePrefab(float playerSize)
     {
-        if (size < 0.95f)
+        if (speciesPrefabs == null || speciesPrefabs.Length == 0)
         {
-            return Random.Range(2.0f, 3.0f);
+            return null;
         }
-        else if (size < 1.4f)
+
+        int totalWeight = 0;
+
+        foreach (FishSpawnEntry entry in speciesPrefabs)
         {
-            return Random.Range(1.5f, 2.3f);
+            FishAI fishAI = GetPrefabFishAI(entry);
+
+            if (fishAI != null && fishAI.fishSize < playerSize)
+            {
+                totalWeight += Mathf.Max(0, entry.spawnWeight);
+            }
         }
-        else
+
+        if (totalWeight <= 0)
         {
-            return Random.Range(1.0f, 1.6f);
+            return null;
         }
+
+        int roll = Random.Range(0, totalWeight);
+        int currentWeight = 0;
+
+        foreach (FishSpawnEntry entry in speciesPrefabs)
+        {
+            FishAI fishAI = GetPrefabFishAI(entry);
+
+            if (fishAI == null || fishAI.fishSize >= playerSize)
+            {
+                continue;
+            }
+
+            currentWeight += Mathf.Max(0, entry.spawnWeight);
+
+            if (roll < currentWeight)
+            {
+                return entry.fishPrefab;
+            }
+        }
+
+        return null;
+    }
+
+    GameObject GetRandomPrefab()
+    {
+        if (speciesPrefabs == null || speciesPrefabs.Length == 0)
+        {
+            return null;
+        }
+
+        int totalWeight = 0;
+
+        foreach (FishSpawnEntry entry in speciesPrefabs)
+        {
+            if (entry != null && entry.fishPrefab != null)
+            {
+                totalWeight += Mathf.Max(0, entry.spawnWeight);
+            }
+        }
+
+        if (totalWeight <= 0)
+        {
+            return speciesPrefabs[Random.Range(0, speciesPrefabs.Length)].fishPrefab;
+        }
+
+        int roll = Random.Range(0, totalWeight);
+        int currentWeight = 0;
+
+        foreach (FishSpawnEntry entry in speciesPrefabs)
+        {
+            if (entry == null || entry.fishPrefab == null)
+            {
+                continue;
+            }
+
+            currentWeight += Mathf.Max(0, entry.spawnWeight);
+
+            if (roll < currentWeight)
+            {
+                return entry.fishPrefab;
+            }
+        }
+
+        return speciesPrefabs[speciesPrefabs.Length - 1].fishPrefab;
+    }
+
+    FishAI GetPrefabFishAI(FishSpawnEntry entry)
+    {
+        if (entry == null || entry.fishPrefab == null)
+        {
+            return null;
+        }
+
+        return entry.fishPrefab.GetComponent<FishAI>();
     }
 }

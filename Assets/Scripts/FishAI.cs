@@ -2,13 +2,15 @@ using UnityEngine;
 
 public class FishAI : MonoBehaviour
 {
+    public string speciesName = "Unknown Fish";
     public float fishSize = 0.8f;
     public float moveSpeed = 2f;
+    public int scoreValue = 1;
 
-    public float minX = -24f;
-    public float maxX = 24f;
-    public float minZ = -24f;
-    public float maxZ = 24f;
+    public float minX = -64f;
+    public float maxX = 64f;
+    public float minZ = -36f;
+    public float maxZ = 36f;
     public float fixedY = 0.5f;
 
     public float minDirectionTime = 1.5f;
@@ -21,7 +23,6 @@ public class FishAI : MonoBehaviour
     {
         PickNewDirection();
         SetNewDirectionTime();
-        ApplyVisualSize();
     }
 
     void Update()
@@ -63,18 +64,6 @@ public class FishAI : MonoBehaviour
         {
             transform.forward = moveDirection;
         }
-    }
-
-    public void SetFishStats(float newSize, float newSpeed)
-    {
-        fishSize = newSize;
-        moveSpeed = newSpeed;
-        ApplyVisualSize();
-    }
-
-    void ApplyVisualSize()
-    {
-        transform.localScale = new Vector3(fishSize, fishSize, fishSize);
     }
 
     void PickNewDirection()
