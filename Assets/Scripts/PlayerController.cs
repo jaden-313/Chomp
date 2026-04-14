@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    public SpriteRenderer spriteRenderer;
     public float moveSpeed = 6f;
     public float minSpeed = 2f;
     public float maxSpeed = 8f;
@@ -62,7 +63,10 @@ public class PlayerController : MonoBehaviour
 
         if (move != Vector3.zero)
         {
-            transform.forward = move;
+            if (h > 0)
+                spriteRenderer.flipX = false;
+            else if (h < 0)
+                spriteRenderer.flipX = true;
         }
     }
 
