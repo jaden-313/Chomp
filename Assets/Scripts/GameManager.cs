@@ -1,12 +1,14 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI highScoreText;
     public TextMeshProUGUI gameOverText;
+    public Button restartButton;
     public Slider hungerBar;
 
     private int highScore = 0;
@@ -22,6 +24,7 @@ public class GameManager : MonoBehaviour
         highScoreText.text = "High Score: " + highScore;
 
         gameOverText.gameObject.SetActive(false);
+        restartButton.gameObject.SetActive(false);
     }
 
     public void UpdateScore(int score)
@@ -48,7 +51,14 @@ public class GameManager : MonoBehaviour
         gameEnded = true;
 
         gameOverText.gameObject.SetActive(true);
+        restartButton.gameObject.SetActive(true);
 
         Time.timeScale = 0f;
+    }
+
+        public void RestartGame()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
