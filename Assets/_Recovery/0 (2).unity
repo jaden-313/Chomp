@@ -818,7 +818,7 @@ MonoBehaviour:
   playerMarker: {fileID: 3000000011}
   fishMarkerTemplate: {fileID: 3000000023}
   radarRange: 35
-  dotSize: 7
+  dotSize: 9
   borderColor: {r: 0.6, g: 0.9, b: 1, a: 0.9}
   edibleColor: {r: 0.2, g: 1, b: 0.2, a: 1}
   neutralColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
@@ -1084,33 +1084,33 @@ MonoBehaviour:
   enableSpawnDebugLogs: 0
   speciesPrefabs:
   - fishPrefab: {fileID: 3342273500277136173, guid: 8a4f1e3011d14f0f9cd1a75f21c7a001, type: 3}
-    spawnWeight: 19
+    spawnWeight: 23
   - fishPrefab: {fileID: 3342273500277136173, guid: 8a4f1e3011d14f0f9cd1a75f21c7a002, type: 3}
     spawnWeight: 18
   - fishPrefab: {fileID: 3342273500277136173, guid: 8a4f1e3011d14f0f9cd1a75f21c7a003, type: 3}
-    spawnWeight: 15
+    spawnWeight: 14
   - fishPrefab: {fileID: 3342273500277136173, guid: 8a4f1e3011d14f0f9cd1a75f21c7a004, type: 3}
     spawnWeight: 12
   - fishPrefab: {fileID: 3342273500277136173, guid: 8a4f1e3011d14f0f9cd1a75f21c7a005, type: 3}
-    spawnWeight: 9
+    spawnWeight: 10
   - fishPrefab: {fileID: 3342273500277136173, guid: 8a4f1e3011d14f0f9cd1a75f21c7a006, type: 3}
-    spawnWeight: 6
+    spawnWeight: 8
   - fishPrefab: {fileID: 3342273500277136173, guid: 8a4f1e3011d14f0f9cd1a75f21c7a007, type: 3}
-    spawnWeight: 4
+    spawnWeight: 8
   - fishPrefab: {fileID: 3342273500277136173, guid: 8a4f1e3011d14f0f9cd1a75f21c7a008, type: 3}
-    spawnWeight: 2
-  targetFishCount: 180
-  spawnCheckInterval: 1.1
-  spawnNearPlayerChance: 0.35
-  edibleSpawnChance: 0.76
-  minSpawnDistanceFromPlayer: 14
-  maxSpawnDistanceFromPlayer: 42
-  outerAreaSpawnChance: 0.55
-  outerAreaInsetFraction: 0.24
-  minX: -120
-  maxX: 120
-  minZ: -68
-  maxZ: 68
+    spawnWeight: 6
+  targetFishCount: 50
+  spawnCheckInterval: 1.75
+  spawnNearPlayerChance: 0.55
+  edibleSpawnChance: 0.72
+  minSpawnDistanceFromPlayer: 8
+  maxSpawnDistanceFromPlayer: 22
+  outerAreaSpawnChance: 0.35
+  outerAreaInsetFraction: 0.28
+  minX: -60
+  maxX: 60
+  minZ: -34
+  maxZ: 34
   fixedY: 0.5
 --- !u!4 &1078428597
 Transform:
@@ -1602,39 +1602,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   spriteRenderer: {fileID: 656949846}
-  moveSpeed: 11
-  minSpeed: 4
-  maxSpeed: 11
+  moveSpeed: 8
+  minSpeed: 2
+  maxSpeed: 8
+  hunger: 100
+  hungerDrainRate: 5
   hungerRestoreAmount: 20
   minHungerRestoreFactor: 0.18
   maxHungerRestoreFactor: 1
-  hungerRestoreExponent: 2
-  smallPreyPenaltyStartSize: 1.35
-  smallPreyPenaltyMaxSize: 3.2
-  smallPreyRelativeSizeThreshold: 0.42
-  smallPreyMaxPenaltyMultiplier: 0.22
-  hunger: 100
-  hungerDrainRate: 3.5
   score: 0
   growthAmount: 0.1
   fixedY: 0.5
   fishSize: 1
   minFishSize: 0.5
-  minX: -128
-  maxX: 128
-  minZ: -72
-  maxZ: 72
+  minX: -64
+  maxX: 64
+  minZ: -36
+  maxZ: 36
   shrinkThreshold: 50
   shrinkRate: 0.15
   visualShrinkRate: 0.05
   facingAngleOffset: 0
   facingThreshold: 0.05
   colliderOutlineScale: 0.86
-  speedSizeReference: 10
-  speedFalloffExponent: 1.1
+  speedSizeReference: 6
+  speedFalloffExponent: 0.65
   sprintMultiplier: 1.35
   sprintHungerDrainRate: 4
-  sprintMaxSpeed: 14.5
+  sprintMaxSpeed: 10.5
   decisiveSizeMultiplier: 1.4
   smallestRecoverablePreySize: 0.4
   recoverySizeMargin: 0.14
@@ -1889,7 +1884,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 32.8, y: 1, z: 18.4}
+  m_LocalScale: {x: 16.4, y: 1, z: 9.2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1906,6 +1901,7 @@ GameObject:
   - component: {fileID: 1598094860}
   - component: {fileID: 1598094859}
   - component: {fileID: 1598094858}
+  - component: {fileID: 1598094862}
   m_Layer: 0
   m_Name: WaterOverlay
   m_TagString: Untagged
@@ -2002,11 +1998,25 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.6, z: 0}
-  m_LocalScale: {x: 32.8, y: 1, z: 18.4}
+  m_LocalScale: {x: 16.4, y: 1, z: 9.2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1598094862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598094857}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32ee48ef1b33da943a6b6d63ccaa60cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaterScroll
+  scrollSpeedX: 0
+  scrollSpeedY: 0
 --- !u!1 &1646441580
 GameObject:
   m_ObjectHideFlags: 0
@@ -2484,7 +2494,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 7, y: 7}
+  m_SizeDelta: {x: 9, y: 9}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3000000022
 CanvasRenderer:

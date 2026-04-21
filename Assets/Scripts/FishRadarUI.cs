@@ -10,14 +10,16 @@ public class FishRadarUI : MonoBehaviour
     public SimpleShapeGraphic fishMarkerTemplate;
 
     public float radarRange = 35f;
-    public float dotSize = 9f;
+    public float dotSize = 7f;
 
     public Color borderColor = new Color(0.6f, 0.9f, 1f, 0.9f);
     public Color edibleColor = new Color(0.2f, 1f, 0.2f);
     public Color neutralColor = Color.gray;
     public Color dangerousColor = new Color(1f, 0.15f, 0.15f);
+    public float neutralTintStrength = 0.45f;
 
     private readonly List<SimpleShapeGraphic> fishDots = new List<SimpleShapeGraphic>();
+    private PlayerController playerController;
 
     void Awake()
     {
@@ -64,6 +66,8 @@ public class FishRadarUI : MonoBehaviour
         {
             return;
         }
+
+        playerController = player != null ? player.GetComponent<PlayerController>() : null;
 
         Outline outline = radarPanel.GetComponent<Outline>();
 
@@ -142,17 +146,41 @@ public class FishRadarUI : MonoBehaviour
 
     Color GetDotColor(FishAI fish)
     {
-        float playerSize = player.localScale.x;
-        float fishSize = fish.transform.localScale.x;
+        if (playerController == null && player != null)
+        {
+            playerController = player.GetComponent<PlayerController>();
+        }
 
-        if (fishSize < playerSize)
+        if (playerController == null)
+        {
+            return neutralColor;
+        }
+
+        bool hasInteractionRead = playerController.GetInteractionRead(fish, out PlayerController.FishInteractionOutcome outcome, out float neutralBias);
+
+        if (outcome == PlayerController.FishInteractionOutcome.PlayerEatsFish)
         {
             return edibleColor;
         }
 
-        if (fishSize >= playerSize * 1.2f)
+        if (outcome == PlayerController.FishInteractionOutcome.FishKillsPlayer)
         {
             return dangerousColor;
+        }
+
+        if (!hasInteractionRead)
+        {
+            return neutralColor;
+        }
+
+        if (neutralBias > 0f)
+        {
+            return Color.Lerp(neutralColor, edibleColor, neutralBias * neutralTintStrength);
+        }
+
+        if (neutralBias < 0f)
+        {
+            return Color.Lerp(neutralColor, dangerousColor, -neutralBias * neutralTintStrength);
         }
 
         return neutralColor;
@@ -164,7 +192,7 @@ public class FishRadarUI : MonoBehaviour
         float fishSize = fish.transform.localScale.x;
         float relativeSize = fishSize / playerSize;
 
-        return dotSize * Mathf.Clamp(relativeSize, 0.65f, 1.7f);
+        return dotSize * Mathf.Clamp(relativeSize, 0.55f, 1.4f);
     }
 
     void UpdatePlayerMarkerRotation()

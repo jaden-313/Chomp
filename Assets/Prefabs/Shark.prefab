@@ -26,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 884713225996999724}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0.1949, y: -1.25, z: -1.1554}
-  m_LocalScale: {x: 4, y: 4, z: 4}
+  m_LocalPosition: {x: 0.1949, y: 0, z: -1.1554}
+  m_LocalScale: {x: 6.5, y: 6.5, z: 6.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9119259266404050739}
@@ -121,7 +121,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 18.9, y: -0.94, z: 17.3}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalScale: {x: 2.2, y: 2.2, z: 2.2}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3597227004062773875}
@@ -218,13 +218,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishAI
   speciesName: Shark
-  fishSize: 3
-  moveSpeed: 1.35
+  fishSize: 6.5
+  moveSpeed: 1.9
   scoreValue: 18
-  minX: -64
-  maxX: 64
-  minZ: -36
-  maxZ: 36
+  minX: -128
+  maxX: 128
+  minZ: -72
+  maxZ: 72
   fixedY: 0.5
   minDirectionTime: 1.5
   maxDirectionTime: 4
+  facingAngleOffset: 0
+  facingThreshold: 0.05
+  colliderOutlineScale: 0.72

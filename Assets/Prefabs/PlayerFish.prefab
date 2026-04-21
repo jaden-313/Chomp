@@ -381,21 +381,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae4cf60cf9020984796a3c6c2e431aeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  moveSpeed: 8
-  minSpeed: 2
-  maxSpeed: 8
+  moveSpeed: 11
+  minSpeed: 4
+  maxSpeed: 11
   hunger: 100
-  hungerDrainRate: 5
+  hungerDrainRate: 3.5
   hungerRestoreAmount: 20
   score: 0
   growthAmount: 0.1
   fixedY: 0.5
   fishSize: 1
   minFishSize: 0.5
-  minX: -64
-  maxX: 64
-  minZ: -36
-  maxZ: 36
+  minX: -128
+  maxX: 128
+  minZ: -72
+  maxZ: 72
   shrinkThreshold: 50
   shrinkRate: 0.15
   visualShrinkRate: 0.05
+  facingAngleOffset: 0
+  facingThreshold: 0.05
+  colliderOutlineScale: 0.86

@@ -15,9 +15,50 @@ public class FishAI : MonoBehaviour
 
     public float minDirectionTime = 1.5f;
     public float maxDirectionTime = 4f;
+    public float facingAngleOffset = 0f;
+    public float facingThreshold = 0.05f;
+    public float colliderOutlineScale = 0.88f;
+    public float interactionSizeMultiplier = 1f;
 
     private Vector3 moveDirection;
     private float directionTimer;
+    private FishSpriteHitbox fishHitbox;
+    private SpriteRenderer spriteRenderer;
+    private Transform visualTransform;
+    private Quaternion baseVisualWorldRotation;
+
+    void Awake()
+    {
+        fishHitbox = GetComponent<FishSpriteHitbox>();
+
+        if (fishHitbox == null)
+        {
+            fishHitbox = gameObject.AddComponent<FishSpriteHitbox>();
+        }
+
+        fishHitbox.EnsureReady();
+        fishHitbox.SetOutlineScale(colliderOutlineScale);
+        spriteRenderer = fishHitbox.SpriteRenderer;
+        visualTransform = spriteRenderer != null ? spriteRenderer.transform : null;
+
+        if (visualTransform != null)
+        {
+            baseVisualWorldRotation = visualTransform.rotation;
+        }
+    }
+
+    void OnEnable()
+    {
+        if (!FishHitboxRegistry.ActiveFish.Contains(this))
+        {
+            FishHitboxRegistry.ActiveFish.Add(this);
+        }
+    }
+
+    void OnDisable()
+    {
+        FishHitboxRegistry.ActiveFish.Remove(this);
+    }
 
     void Start()
     {
@@ -60,10 +101,7 @@ public class FishAI : MonoBehaviour
             SetNewDirectionTime();
         }
 
-        if (moveDirection != Vector3.zero)
-        {
-            transform.forward = moveDirection;
-        }
+        UpdateFacing();
     }
 
     void PickNewDirection()
@@ -78,5 +116,24 @@ public class FishAI : MonoBehaviour
     void SetNewDirectionTime()
     {
         directionTimer = Random.Range(minDirectionTime, maxDirectionTime);
+    }
+
+    void UpdateFacing()
+    {
+        if (visualTransform == null)
+        {
+            return;
+        }
+
+        Vector2 planarDirection = new Vector2(moveDirection.x, moveDirection.z);
+
+        if (planarDirection.sqrMagnitude < facingThreshold * facingThreshold)
+        {
+            return;
+        }
+
+        float headingDegrees = Mathf.Atan2(planarDirection.y, planarDirection.x) * Mathf.Rad2Deg;
+        Quaternion facingRotation = Quaternion.AngleAxis(facingAngleOffset - headingDegrees, Vector3.up);
+        visualTransform.rotation = facingRotation * baseVisualWorldRotation;
     }
 }

@@ -26,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 1367215985781358387}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0.051924966, y: -0.90909094, z: -0.65778214}
-  m_LocalScale: {x: 1.8181819, y: 1.8181819, z: 1.8181819}
+  m_LocalPosition: {x: -0.051924966, y: 0, z: -0.65778214}
+  m_LocalScale: {x: 1.6, y: 1.6, z: 1.6}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9119259266404050739}
@@ -121,7 +121,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 18.9, y: 0.5, z: 17.3}
-  m_LocalScale: {x: 0.55, y: 0.55, z: 0.55}
+  m_LocalScale: {x: 1.3, y: 1.3, z: 1.3}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6474978010107242161}
@@ -218,13 +218,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishAI
   speciesName: ClownFish
-  fishSize: 0.55
-  moveSpeed: 3.1
+  fishSize: 1.3
+  moveSpeed: 4.1
   scoreValue: 2
-  minX: -64
-  maxX: 64
-  minZ: -36
-  maxZ: 36
+  minX: -128
+  maxX: 128
+  minZ: -72
+  maxZ: 72
   fixedY: 0.5
   minDirectionTime: 1.5
   maxDirectionTime: 4
+  facingAngleOffset: 0
+  facingThreshold: 0.05
+  colliderOutlineScale: 0.9

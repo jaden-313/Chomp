@@ -27,7 +27,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -0.052974224, y: -0.3125, z: -2.1008806}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 4, y: 4, z: 4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9119259266404050739}
@@ -121,7 +121,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 18.9, y: 0.5, z: 17.3}
-  m_LocalScale: {x: 1.6, y: 1.6, z: 1.6}
+  m_LocalScale: {x: 1.35, y: 1.35, z: 1.35}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2787915912931374658}
@@ -218,13 +218,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FishAI
   speciesName: Barracuda
-  fishSize: 1.6
-  moveSpeed: 2.6
+  fishSize: 4
+  moveSpeed: 3.3
   scoreValue: 8
-  minX: -64
-  maxX: 64
-  minZ: -36
-  maxZ: 36
+  minX: -128
+  maxX: 128
+  minZ: -72
+  maxZ: 72
   fixedY: 0.5
   minDirectionTime: 1.5
   maxDirectionTime: 4
+  facingAngleOffset: 0
+  facingThreshold: 0.05
+  colliderOutlineScale: 0.78

@@ -3,16 +3,19 @@ using UnityEngine;
 public class FishSpawner : MonoBehaviour
 {
     public Transform player;
+    public bool enableSpawnDebugLogs = false;
 
     // Add one entry for each species prefab. The spawner instantiates these directly.
     public FishSpawnEntry[] speciesPrefabs;
 
     public int targetFishCount = 45;
     public float spawnCheckInterval = 2f;
-    public float spawnNearPlayerChance = 0.75f;
+    public float spawnNearPlayerChance = 0.55f;
     public float edibleSpawnChance = 0.65f;
     public float minSpawnDistanceFromPlayer = 8f;
     public float maxSpawnDistanceFromPlayer = 22f;
+    public float outerAreaSpawnChance = 0.35f;
+    public float outerAreaInsetFraction = 0.28f;
 
     public float minX = -60f;
     public float maxX = 60f;
@@ -57,8 +60,38 @@ public class FishSpawner : MonoBehaviour
 
         if (fishPrefab != null)
         {
-            Instantiate(fishPrefab, spawnPosition, Quaternion.identity);
+            GameObject spawnedFish = Instantiate(fishPrefab, spawnPosition, Quaternion.identity);
+            LogSpawnDebug(fishPrefab, spawnedFish);
         }
+    }
+
+    void LogSpawnDebug(GameObject fishPrefab, GameObject spawnedFish)
+    {
+        if (!enableSpawnDebugLogs)
+        {
+            return;
+        }
+
+        if (spawnedFish == null)
+        {
+            Debug.LogWarning($"[FishSpawn] Failed to instantiate prefab '{fishPrefab?.name ?? "null"}'.");
+            return;
+        }
+
+        SpriteRenderer spriteRenderer = spawnedFish.GetComponentInChildren<SpriteRenderer>();
+        string spriteName = spriteRenderer != null && spriteRenderer.sprite != null ? spriteRenderer.sprite.name : "null";
+        string sortingLayerName = spriteRenderer != null ? SortingLayer.IDToName(spriteRenderer.sortingLayerID) : "none";
+        string colorText = spriteRenderer != null ? spriteRenderer.color.ToString() : "n/a";
+        string scaleText = spawnedFish.transform.lossyScale.ToString("F3");
+        string positionText = spawnedFish.transform.position.ToString("F3");
+
+        Debug.Log(
+            $"[FishSpawn] prefab='{fishPrefab.name}' instance='{spawnedFish.name}' sprite='{spriteName}' " +
+            $"rendererEnabled={(spriteRenderer != null && spriteRenderer.enabled)} color={colorText} alpha={(spriteRenderer != null ? spriteRenderer.color.a : 0f):F2} " +
+            $"sortingLayer='{sortingLayerName}' order={(spriteRenderer != null ? spriteRenderer.sortingOrder : 0)} " +
+            $"scale={scaleText} position={positionText}",
+            spawnedFish
+        );
     }
 
     Vector3 GetSpawnPosition()
@@ -78,6 +111,11 @@ public class FishSpawner : MonoBehaviour
             );
         }
 
+        if (Random.value < outerAreaSpawnChance)
+        {
+            return GetOuterAreaSpawnPosition();
+        }
+
         return new Vector3(
             Random.Range(minX, maxX),
             fixedY,
@@ -85,21 +123,100 @@ public class FishSpawner : MonoBehaviour
         );
     }
 
+    Vector3 GetOuterAreaSpawnPosition()
+    {
+        float insetX = Mathf.Clamp((maxX - minX) * outerAreaInsetFraction, 0f, Mathf.Max(0f, (maxX - minX) * 0.5f - 1f));
+        float insetZ = Mathf.Clamp((maxZ - minZ) * outerAreaInsetFraction, 0f, Mathf.Max(0f, (maxZ - minZ) * 0.5f - 1f));
+
+        float innerMinX = minX + insetX;
+        float innerMaxX = maxX - insetX;
+        float innerMinZ = minZ + insetZ;
+        float innerMaxZ = maxZ - insetZ;
+
+        bool spawnAlongVerticalEdge = Random.value < 0.5f;
+        float spawnX;
+        float spawnZ;
+
+        if (spawnAlongVerticalEdge)
+        {
+            bool leftSide = Random.value < 0.5f;
+            spawnX = leftSide ? Random.Range(minX, innerMinX) : Random.Range(innerMaxX, maxX);
+            spawnZ = Random.Range(minZ, maxZ);
+        }
+        else
+        {
+            bool bottomSide = Random.value < 0.5f;
+            spawnX = Random.Range(minX, maxX);
+            spawnZ = bottomSide ? Random.Range(minZ, innerMinZ) : Random.Range(innerMaxZ, maxZ);
+        }
+
+        return new Vector3(spawnX, fixedY, spawnZ);
+    }
+
     GameObject GetPrefabForSpawn()
     {
         // Most spawns try to keep edible fish available near the player.
         // If none are edible yet, the spawner falls back to the full species list.
-        if (player != null && Random.value < edibleSpawnChance)
+        if (player != null)
         {
-            GameObject ediblePrefab = GetRandomEdiblePrefab(player.localScale.x);
+            float playerSize = player.localScale.x;
+            int edibleSpeciesCount = GetEdibleSpeciesCount(playerSize);
+            float adaptiveEdibleChance = GetAdaptiveEdibleSpawnChance(edibleSpeciesCount);
 
-            if (ediblePrefab != null)
+            if (Random.value < adaptiveEdibleChance)
             {
-                return ediblePrefab;
+                GameObject ediblePrefab = GetRandomEdiblePrefab(playerSize);
+
+                if (ediblePrefab != null)
+                {
+                    return ediblePrefab;
+                }
             }
         }
 
         return GetRandomPrefab();
+    }
+
+    int GetEdibleSpeciesCount(float playerSize)
+    {
+        if (speciesPrefabs == null || speciesPrefabs.Length == 0)
+        {
+            return 0;
+        }
+
+        int count = 0;
+
+        foreach (FishSpawnEntry entry in speciesPrefabs)
+        {
+            FishAI fishAI = GetPrefabFishAI(entry);
+
+            if (fishAI != null && fishAI.fishSize < playerSize)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    float GetAdaptiveEdibleSpawnChance(int edibleSpeciesCount)
+    {
+        if (edibleSpeciesCount <= 0)
+        {
+            return 0f;
+        }
+
+        if (edibleSpeciesCount == 1)
+        {
+            return edibleSpawnChance * 0.35f;
+        }
+
+        if (edibleSpeciesCount == 2)
+        {
+            return edibleSpawnChance * 0.65f;
+        }
+
+        return edibleSpawnChance;
     }
 
     GameObject GetRandomEdiblePrefab(float playerSize)
