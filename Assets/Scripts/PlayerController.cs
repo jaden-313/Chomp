@@ -25,6 +25,9 @@ public class PlayerController : MonoBehaviour
     public float smallPreyRelativeSizeThreshold = 0.42f;
     public float smallPreyMaxPenaltyMultiplier = 0.22f;
 
+    public float sizeBasedHungerDrainStart = 1f;
+    public float minHungerDrainMultiplier = 0.65f;
+    public float hungerDrainSizeMax = 3f;
 
     public float hunger = 100f;
     public float hungerDrainRate = 2f;
@@ -163,7 +166,12 @@ public class PlayerController : MonoBehaviour
 
     void DrainHunger()
     {
-        float totalHungerDrainRate = hungerDrainRate;
+        float currentSize = GetCurrentCombatSize(playerHitbox, fishSize, transform.localScale.x);
+
+        float sizeDrainT = Mathf.InverseLerp(sizeBasedHungerDrainStart, hungerDrainSizeMax, currentSize);
+        float sizeDrainMultiplier = Mathf.Lerp(1f, minHungerDrainMultiplier, sizeDrainT);
+
+        float totalHungerDrainRate = hungerDrainRate * sizeDrainMultiplier;
 
         if (isSprinting)
         {
