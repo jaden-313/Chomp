@@ -1,0 +1,15 @@
+d3c4aeb2475459a576ff1b90a1719c9fe86c7ac9 | jaden-313 | Wed Apr 22 01:29:13 2026 -0400 | Final push before submission
+1493b6482ab647f32a8c8d985a3a5d22e872f18b | raccooncoded | Tue Apr 21 22:44:03 2026 -0400 | Merge pull request #4 from jaden-313/katybranch2
+0f5b6ae1069a54cbe8d2c709821bc6f65b7589c0 | knymshack | Tue Apr 21 22:43:12 2026 -0400 | added main menu
+d2f6a9e74eda0f84c94d8bd736bd03536007a8d8 | jaden-313 | Tue Apr 21 02:40:02 2026 -0400 | hunger is slowed down when player is larger
+c7fd06ba8f3aea2c5e2fb9225a90dca11ffbb342 | jaden-313 | Tue Apr 21 02:11:43 2026 -0400 | fixed mechanical issues such as hitboxes and speed, slightly touched up on design.  added sprint, balancing game when larger. overhauled hunger bar design and mechanics
+a4baeb66b084bb9f7974e9c46ca5253b7b5d8a88 | mlightford | Mon Apr 13 23:58:04 2026 -0400 | Added the fish/ experimented with size
+daa6d699af8bf5e43211e818b8f8176feef87c00 | raccooncoded | Mon Apr 13 21:19:12 2026 -0400 | Merge pull request #3 from jaden-313/katybranch2
+7e6ad9bf471afaf1ca750eee2faef52c32b3d195 | knymshack | Mon Apr 13 21:17:47 2026 -0400 | player fish, background water, restart button
+4f08d8641d651a66de3f213d14b9abdfeb6e95ad | jaden-313 | Sun Apr 12 00:49:34 2026 -0400 | Mechanics improvement, adding species and prefabs, increased map size, created radar UI
+0fbe366191a004aee0646649dcdb159da27b970e | raccooncoded | Wed Apr 1 13:43:29 2026 -0400 | Merge pull request #1 from jaden-313/katy-branch
+409bd069d2530ab7442ff90810f66c893cfa588e | knymshack | Wed Apr 1 13:42:37 2026 -0400 | centered directional light overhead
+968ad0b4192699338820fde790a9bfe80b6d783f | knymshack | Wed Apr 1 00:30:53 2026 -0400 | changed camera to orthographic/added fish colors for visibility
+64b7e82ac7b823244064970a5247582ef76de69a | jaden-313 | Wed Mar 25 03:34:29 2026 -0400 | Starting prototype
+6d4b63fafdd01cc55b08eef5b37b54af8385b606 | jaden-313 | Tue Mar 24 23:41:28 2026 -0400 | first commit
+082fb1149d68ccdcf57b9ef96c57386b31ed962e | jaden-313 | Tue Mar 24 23:34:06 2026 -0400 | Initial commit
