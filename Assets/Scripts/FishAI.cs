@@ -19,13 +19,21 @@ public class FishAI : MonoBehaviour
     public float facingThreshold = 0.05f;
     public float colliderOutlineScale = 0.88f;
     public float interactionSizeMultiplier = 1f;
+    public float playerDetectionRange = 12f;
+    public float stopChasingRange = 17f;
+    public float chaseLoseSightDuration = 2.25f;
+    public float chaseMoveSpeed = 3.5f;
 
     private Vector3 moveDirection;
     private float directionTimer;
     private FishSpriteHitbox fishHitbox;
+    private FishSpriteHitbox playerHitbox;
     private SpriteRenderer spriteRenderer;
     private Transform visualTransform;
     private Quaternion baseVisualWorldRotation;
+    private Transform player;
+    private bool isChasingPlayer;
+    private float lostSightTimer;
 
     void Awake()
     {
@@ -64,19 +72,28 @@ public class FishAI : MonoBehaviour
     {
         PickNewDirection();
         SetNewDirectionTime();
+        FindPlayer();
     }
 
     void Update()
     {
-        directionTimer -= Time.deltaTime;
-
-        if (directionTimer <= 0f)
+        if (ShouldChasePlayer())
         {
-            PickNewDirection();
-            SetNewDirectionTime();
+            UpdateChaseDirection();
+        }
+        else
+        {
+            directionTimer -= Time.deltaTime;
+
+            if (directionTimer <= 0f)
+            {
+                PickNewDirection();
+                SetNewDirectionTime();
+            }
         }
 
-        transform.position += moveDirection * moveSpeed * Time.deltaTime;
+        float currentMoveSpeed = isChasingPlayer ? chaseMoveSpeed : moveSpeed;
+        transform.position += moveDirection * currentMoveSpeed * Time.deltaTime;
 
         bool hitEdge = false;
 
@@ -95,7 +112,7 @@ public class FishAI : MonoBehaviour
 
         transform.position = new Vector3(clampedX, fixedY, clampedZ);
 
-        if (hitEdge)
+        if (hitEdge && !isChasingPlayer)
         {
             PickNewDirection();
             SetNewDirectionTime();
@@ -106,6 +123,7 @@ public class FishAI : MonoBehaviour
 
     void PickNewDirection()
     {
+        isChasingPlayer = false;
         moveDirection = new Vector3(
             Random.Range(-1f, 1f),
             0f,
@@ -116,6 +134,127 @@ public class FishAI : MonoBehaviour
     void SetNewDirectionTime()
     {
         directionTimer = Random.Range(minDirectionTime, maxDirectionTime);
+    }
+
+    void FindPlayer()
+    {
+        if (player != null)
+        {
+            return;
+        }
+
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+
+        if (playerObject != null)
+        {
+            player = playerObject.transform;
+            playerHitbox = playerObject.GetComponent<FishSpriteHitbox>();
+        }
+    }
+
+    bool ShouldChasePlayer()
+    {
+        if (!IsPredatorSpecies())
+        {
+            isChasingPlayer = false;
+            lostSightTimer = 0f;
+            return false;
+        }
+
+        FindPlayer();
+
+        if (player == null)
+        {
+            isChasingPlayer = false;
+            lostSightTimer = 0f;
+            return false;
+        }
+
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        float chaseEndRange = Mathf.Max(playerDetectionRange, stopChasingRange);
+        bool fishIsBigger = IsFishBiggerThanPlayer();
+
+        if (isChasingPlayer)
+        {
+            if (!fishIsBigger)
+            {
+                isChasingPlayer = false;
+                lostSightTimer = 0f;
+                return false;
+            }
+
+            if (distanceToPlayer <= chaseEndRange)
+            {
+                lostSightTimer = 0f;
+                return true;
+            }
+
+            lostSightTimer += Time.deltaTime;
+
+            if (lostSightTimer >= chaseLoseSightDuration)
+            {
+                isChasingPlayer = false;
+                lostSightTimer = 0f;
+                return false;
+            }
+
+            return true;
+        }
+
+        isChasingPlayer = fishIsBigger && distanceToPlayer <= playerDetectionRange;
+
+        if (isChasingPlayer)
+        {
+            lostSightTimer = 0f;
+        }
+
+        return isChasingPlayer;
+    }
+
+    void UpdateChaseDirection()
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        Vector3 directionToPlayer = player.position - transform.position;
+        directionToPlayer.y = 0f;
+
+        if (directionToPlayer.sqrMagnitude > 0.0001f)
+        {
+            moveDirection = directionToPlayer.normalized;
+        }
+    }
+
+    bool IsPredatorSpecies()
+    {
+        string normalizedSpeciesName = speciesName.Trim().ToLowerInvariant();
+        return normalizedSpeciesName == "swordfish" ||
+               normalizedSpeciesName == "barracuda" ||
+               normalizedSpeciesName == "shark";
+    }
+
+    bool IsFishBiggerThanPlayer()
+    {
+        if (player == null)
+        {
+            return false;
+        }
+
+        float playerSize = GetCurrentSize(playerHitbox, player.localScale.x);
+        float fishCurrentSize = GetCurrentSize(fishHitbox, Mathf.Max(transform.localScale.x, fishSize));
+        return fishCurrentSize > playerSize;
+    }
+
+    float GetCurrentSize(FishSpriteHitbox hitbox, float fallbackSize)
+    {
+        if (hitbox != null && hitbox.TryGetBodySizeMetricXZ(out float size))
+        {
+            return Mathf.Max(size, 0.01f);
+        }
+
+        return Mathf.Max(fallbackSize, 0.01f);
     }
 
     void UpdateFacing()

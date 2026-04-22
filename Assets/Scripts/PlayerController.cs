@@ -10,6 +10,21 @@ public class PlayerController : MonoBehaviour
     }
 
     public SpriteRenderer spriteRenderer;
+    public AudioSource eatAudioSource;
+    public AudioClip eatFishSound;
+    public float eatSoundVolume = 0.9f;
+    public float smallestFishEatPitch = 1.28f;
+    public float largestFishEatPitch = 0.92f;
+    public float minimumPitchFishSize = 0.3f;
+    public float maximumPitchFishSize = 4.5f;
+    public float eatSoundLeadInTrimSeconds = 0.08f;
+    public float eatSoundTrimThreshold = 0.05f;
+    public float eatSoundMaxTrimSeconds = 0.5f;
+    public float playerEatenHighestPitch = 1.02f;
+    public float playerEatenLowestPitch = 0.84f;
+    public float playerEatenMinRelativeThreat = 1f;
+    public float playerEatenMaxRelativeThreat = 2.2f;
+    public float playerEatenSoundVolume = 0.55f;
     public float moveSpeed = 11f;
     public float minSpeed = 4f;
     public float maxSpeed = 11f;
@@ -66,6 +81,8 @@ public class PlayerController : MonoBehaviour
     private Transform visualTransform;
     private Quaternion baseVisualWorldRotation;
     private bool isSprinting;
+    private AudioClip preparedEatFishSound;
+    private bool hasPlayedPlayerEatenSound;
 
     void Awake()
     {
@@ -73,6 +90,8 @@ public class PlayerController : MonoBehaviour
         {
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         }
+
+        SetupEatAudioSource();
 
         playerHitbox = GetComponent<FishSpriteHitbox>();
 
@@ -89,10 +108,31 @@ public class PlayerController : MonoBehaviour
         {
             baseVisualWorldRotation = visualTransform.rotation;
         }
+
+        preparedEatFishSound = BuildPreparedEatSoundClip();
+    }
+
+    void SetupEatAudioSource()
+    {
+        if (eatAudioSource == null)
+        {
+            eatAudioSource = GetComponent<AudioSource>();
+        }
+
+        if (eatAudioSource == null)
+        {
+            eatAudioSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        eatAudioSource.playOnAwake = false;
+        eatAudioSource.loop = false;
+        eatAudioSource.spatialBlend = 0f;
     }
 
     void Start()
     {
+        score = 0;
+        hasPlayedPlayerEatenSound = false;
         gameManager = FindFirstObjectByType<GameManager>();
 
         if (gameManager != null)
@@ -247,6 +287,8 @@ public class PlayerController : MonoBehaviour
             }
             else if (outcome == FishInteractionOutcome.FishKillsPlayer)
             {
+                PlayPlayerEatenSound(otherFish, otherHitbox);
+
                 if (gameManager != null)
                 {
                     gameManager.GameOver();
@@ -337,6 +379,8 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        float eatenFishSize = GetCurrentCombatSize(eatenFishHitbox, eatenFish.fishSize, eatenFish.transform.localScale.x);
+        PlayEatSound(eatenFishSize);
         score += eatenFish.scoreValue;
         float hungerRestore = GetHungerRestoreAmount(eatenFish, eatenFishHitbox);
         hunger = Mathf.Min(hunger + hungerRestore, 100f);
@@ -351,6 +395,115 @@ public class PlayerController : MonoBehaviour
         }
 
         Destroy(eatenFish.gameObject);
+    }
+
+    void PlayEatSound(float eatenFishSize)
+    {
+        AudioClip clipToPlay = preparedEatFishSound != null ? preparedEatFishSound : eatFishSound;
+
+        if (eatAudioSource == null || clipToPlay == null)
+        {
+            return;
+        }
+
+        if (MainMenuManager.IsChompSoundMuted())
+        {
+            return;
+        }
+
+        float pitchSizeT = Mathf.InverseLerp(minimumPitchFishSize, maximumPitchFishSize, eatenFishSize);
+        eatAudioSource.volume = eatSoundVolume;
+        eatAudioSource.pitch = Mathf.Lerp(smallestFishEatPitch, largestFishEatPitch, pitchSizeT);
+        eatAudioSource.PlayOneShot(clipToPlay, eatSoundVolume);
+    }
+
+    void PlayPlayerEatenSound(FishAI predatorFish, FishSpriteHitbox predatorHitbox)
+    {
+        AudioClip clipToPlay = preparedEatFishSound != null ? preparedEatFishSound : eatFishSound;
+
+        if (eatAudioSource == null || clipToPlay == null || hasPlayedPlayerEatenSound)
+        {
+            return;
+        }
+
+        if (MainMenuManager.IsChompSoundMuted() || predatorFish == null)
+        {
+            return;
+        }
+
+        float playerCurrentSize = GetCurrentCombatSize(playerHitbox, fishSize, transform.localScale.x);
+        float predatorCurrentSize = GetCurrentCombatSize(predatorHitbox, predatorFish.fishSize, predatorFish.transform.localScale.x);
+        float relativeThreat = predatorCurrentSize / Mathf.Max(playerCurrentSize, Mathf.Epsilon);
+        float threatT = Mathf.InverseLerp(playerEatenMinRelativeThreat, playerEatenMaxRelativeThreat, relativeThreat);
+
+        hasPlayedPlayerEatenSound = true;
+        eatAudioSource.Stop();
+        eatAudioSource.clip = clipToPlay;
+        eatAudioSource.volume = playerEatenSoundVolume;
+        eatAudioSource.pitch = Mathf.Lerp(playerEatenHighestPitch, playerEatenLowestPitch, threatT);
+        eatAudioSource.Play();
+    }
+
+    AudioClip BuildPreparedEatSoundClip()
+    {
+        if (eatFishSound == null)
+        {
+            return null;
+        }
+
+        if (!eatFishSound.LoadAudioData())
+        {
+            return eatFishSound;
+        }
+
+        int channels = Mathf.Max(1, eatFishSound.channels);
+        int totalSamples = eatFishSound.samples * channels;
+
+        if (totalSamples <= 0)
+        {
+            return eatFishSound;
+        }
+
+        float[] sampleData = new float[totalSamples];
+
+        if (!eatFishSound.GetData(sampleData, 0))
+        {
+            return eatFishSound;
+        }
+
+        int leadInTrimSamples = Mathf.RoundToInt(eatFishSound.frequency * eatSoundLeadInTrimSeconds) * channels;
+        int maxTrimSamples = Mathf.Min(
+            totalSamples,
+            Mathf.RoundToInt(eatFishSound.frequency * eatSoundMaxTrimSeconds) * channels);
+
+        int firstAudibleSample = Mathf.Clamp(leadInTrimSamples, 0, Mathf.Max(0, totalSamples - channels));
+
+        while (firstAudibleSample < maxTrimSamples &&
+               Mathf.Abs(sampleData[firstAudibleSample]) < eatSoundTrimThreshold)
+        {
+            firstAudibleSample++;
+        }
+
+        firstAudibleSample -= firstAudibleSample % channels;
+
+        if (firstAudibleSample <= 0 || firstAudibleSample >= totalSamples - channels)
+        {
+            return eatFishSound;
+        }
+
+        int trimmedSampleCount = totalSamples - firstAudibleSample;
+        float[] trimmedData = new float[trimmedSampleCount];
+        System.Array.Copy(sampleData, firstAudibleSample, trimmedData, 0, trimmedSampleCount);
+
+        AudioClip trimmedClip = AudioClip.Create(
+            eatFishSound.name + "_Trimmed",
+            trimmedSampleCount / channels,
+            channels,
+            eatFishSound.frequency,
+            false);
+
+        trimmedClip.SetData(trimmedData, 0);
+        return trimmedClip;
     }
 
     float GetGrowthGain(FishAI eatenFish, FishSpriteHitbox eatenFishHitbox)

@@ -5,10 +5,15 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    private const string HighScoreKey = "HighScore";
+    private const string HighScoreInitializedKey = "HighScoreInitialized";
+    private const string MainMenuSceneName = "MainMenuScene";
+
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI highScoreText;
     public TextMeshProUGUI gameOverText;
     public Button restartButton;
+    public Button mainMenuButton;
     public Slider hungerBar;
     public Image hungerBarFill;
     public Color hungerFullColor = new Color(0.2f, 0.95f, 0.3f, 1f);
@@ -26,13 +31,24 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         ResolveHungerBarReferences();
 
-        highScore = PlayerPrefs.GetInt("HighScore", 0);
+        if (!PlayerPrefs.HasKey(HighScoreInitializedKey))
+        {
+            PlayerPrefs.SetInt(HighScoreKey, 0);
+            PlayerPrefs.SetInt(HighScoreInitializedKey, 1);
+            PlayerPrefs.Save();
+        }
 
-        scoreText.text = "Score: 0";
-        highScoreText.text = "High Score: " + highScore;
+        highScore = PlayerPrefs.GetInt(HighScoreKey, 0);
+
+        UpdateScoreDisplay(0);
+        UpdateHighScoreDisplay();
 
         gameOverText.gameObject.SetActive(false);
         restartButton.gameObject.SetActive(false);
+        if (mainMenuButton != null)
+        {
+            mainMenuButton.gameObject.SetActive(false);
+        }
         ApplyHungerBarVisual(force: true);
     }
 
@@ -53,13 +69,14 @@ public class GameManager : MonoBehaviour
 
     public void UpdateScore(int score)
     {
-        scoreText.text = "Score: " + score;
+        UpdateScoreDisplay(score);
 
         if (score > highScore)
         {
             highScore = score;
-            PlayerPrefs.SetInt("HighScore", highScore);
-            highScoreText.text = "High Score: " + highScore;
+            PlayerPrefs.SetInt(HighScoreKey, highScore);
+            PlayerPrefs.Save();
+            UpdateHighScoreDisplay();
         }
     }
 
@@ -87,6 +104,10 @@ public class GameManager : MonoBehaviour
 
         gameOverText.gameObject.SetActive(true);
         restartButton.gameObject.SetActive(true);
+        if (mainMenuButton != null)
+        {
+            mainMenuButton.gameObject.SetActive(true);
+        }
 
         Time.timeScale = 0f;
     }
@@ -95,6 +116,28 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void GoToMainMenu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(MainMenuSceneName);
+    }
+
+    void UpdateScoreDisplay(int score)
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: " + score;
+        }
+    }
+
+    void UpdateHighScoreDisplay()
+    {
+        if (highScoreText != null)
+        {
+            highScoreText.text = "High Score: " + highScore;
+        }
     }
 
     void ResolveHungerBarReferences()
