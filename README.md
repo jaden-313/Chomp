@@ -44,10 +44,10 @@ As the player grows, movement speed decreases. When the player is smaller, movem
 ## Screenshots
 
 ### Main Menu
-![Main Menu Screenshot](screenshots/main-menu.png)
+<img src="screenshots/main-menu.png" alt="Main Menu Screenshot" width="600"/>
 
 ### Gameplay
-![Gameplay Screenshot](screenshots/gameplay.png)
+<img src="screenshots/gameplay.png" alt="Gameplay Screenshot" width="600"/>
 
 ## Technologies
 
