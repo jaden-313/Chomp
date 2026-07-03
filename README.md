@@ -3,7 +3,7 @@
 Chomp is a Unity game where you play as a goldfish trying to survive by eating smaller fish, growing larger, and avoiding bigger fish.
 
 Play the web build here:  
-[Chomp Web Build](https://play.unity.com/en/games/a730ef1c-91df-4f8a-9842-6a603bd6d0d4/chompwebbuild)
+[Chomp](https://play.unity.com/en/games/a730ef1c-91df-4f8a-9842-6a603bd6d0d4/chompwebbuild)
 
 ## Gameplay
 
@@ -43,11 +43,11 @@ As the player grows, movement speed decreases. When the player is smaller, movem
 
 ## Screenshots
 
+### Main Menu
+![Main Menu Screenshot](screenshots/main-menu.png)
+
 ### Gameplay
 ![Gameplay Screenshot](screenshots/gameplay.png)
-
-### Radar and Fish Interaction
-![Radar Screenshot](screenshots/radar.png)
 
 ## Technologies
 
